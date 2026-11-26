@@ -35,8 +35,9 @@ export type SummaryOrder = {
     vat_scheme: "brugtmoms" | "regular" | null;
     /** Needed to split deposit VAT; falls back to 25/125 of the line when absent. */
     vat_amount?: number | null;
+    description?: string | null;
   }>;
-  order_payments: Array<{ type: string; amount_oere: number }>;
+  order_payments: Array<{ type: string; amount_oere: number; reference?: string | null }>;
 };
 
 export type SummarySession = {
@@ -52,6 +53,34 @@ export type SummarySession = {
   expenses: CashExpense[];
   locked: boolean;
   adjustments: number[];
+  openedByName?: string | null;
+  closedByName?: string | null;
+  /** Kortsalg i kassen, terminalens total og forskellen, sat ved lukning. */
+  expectedCard?: number | null;
+  countedCard?: number | null;
+  cardDifference?: number | null;
+  cardNote?: string | null;
+};
+
+/** Salgstyper på opgørelsen, i den rækkefølge de vises. */
+export const SALE_KINDS = ["repair_service", "device", "sku_product", "free_text", "deposit", "deposit_applied"] as const;
+export const SALE_KIND_LABELS: Record<string, string> = {
+  repair_service: "Reparationer",
+  device: "Enheder",
+  sku_product: "Tilbehør og varer",
+  free_text: "Andet salg (fritekst)",
+  deposit: "Depositum modtaget",
+  deposit_applied: "Depositum modregnet",
+};
+
+export type SummaryReceipt = {
+  number: string;
+  type: "pos" | "credit_note";
+  confirmedAt: string | null;
+  total: number;
+  /** Kort tekst om indholdet: linjens beskrivelse, ellers salgstypen. */
+  what: string;
+  payments: Array<{ type: string; amount: number; reference: string | null }>;
 };
 
 export type PaymentBreakdown = { type: PaymentType; received: number; refunded: number; net: number };
@@ -61,6 +90,18 @@ export type DailySummary = {
   locationId: string | null;
   registerId: string | null;
   registerName: string | null;
+  /** Butik og juridisk enhed til bilagets hoved (sat af loaderen). */
+  locationName: string | null;
+  locationAddress: string | null;
+  company: { name: string; cvr: string } | null;
+  /** Omsætning ekskl. moms: netTotal minus udgående moms og brugtmoms. */
+  netExVat: number;
+  /** Nettosalg pr. salgstype (inkl. moms, efter linjerabat). Kun typer med beløb. */
+  byKind: Array<{ kind: string; label: string; gross: number }>;
+  /** Hver bon i nummerorden: bilagets sporbarhed. */
+  receipts: SummaryReceipt[];
+  /** Kortafstemning fra lukkede sessioner; null når ingen session har en terminaltotal. */
+  card: { expected: number; counted: number; difference: number; notes: string[] } | null;
   salesCount: number;
   creditCount: number;
   grossSales: number;
@@ -107,7 +148,15 @@ export type DailySummary = {
 export function aggregateDailySummary(
   orders: SummaryOrder[],
   sessions: SummarySession[],
-  meta: { date: string; locationId?: string | null; registerId?: string | null; registerName?: string | null },
+  meta: {
+    date: string;
+    locationId?: string | null;
+    registerId?: string | null;
+    registerName?: string | null;
+    locationName?: string | null;
+    locationAddress?: string | null;
+    company?: { name: string; cvr: string } | null;
+  },
 ): DailySummary {
   let salesCount = 0;
   let creditCount = 0;
@@ -127,6 +176,8 @@ export function aggregateDailySummary(
   let depReceivedVat = 0;
   let depApplied = 0;
   let depAppliedVat = 0;
+  const kindGross = new Map<string, number>();
+  const receipts: SummaryReceipt[] = [];
 
   const numbered = orders
     .filter((o) => o.receipt_no != null)
@@ -152,6 +203,7 @@ export function aggregateDailySummary(
     brugtmoms += o.brugtmoms_total ?? 0;
 
     for (const it of o.order_items ?? []) {
+      kindGross.set(it.item_type, (kindGross.get(it.item_type) ?? 0) + it.total_price - (it.discount_amount ?? 0));
       if (it.item_type === "device") deviceCount += it.quantity;
       else if (it.item_type === "sku_product") skuCount += it.quantity;
       if (it.vat_scheme === "brugtmoms") brugtGross += it.total_price - (it.discount_amount ?? 0);
@@ -172,6 +224,18 @@ export function aggregateDailySummary(
         : o.payment_method
           ? [{ type: legacyType(o.payment_method), amount_oere: o.total }]
           : [];
+    receipts.push({
+      number: o.receipt_number ?? o.order_number,
+      type: o.type,
+      confirmedAt: o.confirmed_at,
+      total: o.total,
+      what: receiptWhat(o),
+      payments: lines.map((p: { type: string; amount_oere: number; reference?: string | null }) => ({
+        type: p.type,
+        amount: p.amount_oere,
+        reference: p.reference ?? null,
+      })),
+    });
     for (const p of lines) {
       if (!isPaymentType(p.type)) continue;
       const cur = pay.get(p.type) ?? { type: p.type, received: 0, refunded: 0, net: 0 };
@@ -186,6 +250,28 @@ export function aggregateDailySummary(
   const payments = PAYMENT_TYPES.filter((t) => pay.has(t)).map((t) => pay.get(t)!);
 
   const closed = sessions.filter((s) => s.locked);
+  const withCard = closed.filter((s) => s.countedCard != null);
+  const card =
+    withCard.length > 0
+      ? {
+          expected: withCard.reduce((s, x) => s + (x.expectedCard ?? 0), 0),
+          counted: withCard.reduce((s, x) => s + (x.countedCard ?? 0), 0),
+          difference: withCard.reduce((s, x) => s + (x.cardDifference ?? 0), 0),
+          notes: withCard.map((x) => x.cardNote ?? "").filter(Boolean),
+        }
+      : null;
+
+  const known = SALE_KINDS as readonly string[];
+  const byKind = [...kindGross.entries()]
+    .filter(([, gross]) => gross !== 0)
+    .sort((a, b) => rank(known, a[0]) - rank(known, b[0]))
+    .map(([kind, gross]) => ({ kind, label: SALE_KIND_LABELS[kind] ?? kind, gross }));
+  // Ordrerabatter, der ikke ligger på linjerne (fx 3 for 2), så kolonnen summer til omsætningen.
+  const kindSum = byKind.reduce((s, k) => s + k.gross, 0);
+  if (byKind.length > 0 && kindSum !== netTotal) {
+    byKind.push({ kind: "adjustment", label: "Rabat på hele bonen", gross: netTotal - kindSum });
+  }
+  receipts.sort((a, b) => a.number.localeCompare(b.number) || (a.confirmedAt ?? "").localeCompare(b.confirmedAt ?? ""));
   const cash = {
     sessionsClosed: closed.length,
     sessionsOpen: sessions.length - closed.length,
@@ -202,6 +288,13 @@ export function aggregateDailySummary(
     locationId: meta.locationId ?? null,
     registerId: meta.registerId ?? null,
     registerName: meta.registerName ?? null,
+    locationName: meta.locationName ?? null,
+    locationAddress: meta.locationAddress ?? null,
+    company: meta.company ?? null,
+    netExVat: netTotal - vatStandard - brugtmoms,
+    byKind,
+    receipts,
+    card,
     salesCount,
     creditCount,
     grossSales,
@@ -227,6 +320,23 @@ export function aggregateDailySummary(
     sessions,
     cash,
   };
+}
+
+function rank(order: readonly string[], kind: string): number {
+  const i = order.indexOf(kind);
+  return i === -1 ? order.length : i;
+}
+
+/** Hvad bonen dækker: linjernes beskrivelser, ellers salgstypen. Depositum-modregning udelades. */
+function receiptWhat(o: SummaryOrder): string {
+  const parts: string[] = [];
+  for (const it of o.order_items ?? []) {
+    if (it.item_type === "deposit_applied") continue;
+    const text = it.description?.trim() || SALE_KIND_LABELS[it.item_type] || it.item_type;
+    if (!parts.includes(text)) parts.push(text);
+  }
+  const joined = parts.join(", ");
+  return joined.length > 120 ? `${joined.slice(0, 117)}...` : joined;
 }
 
 function legacyType(method: string): string {

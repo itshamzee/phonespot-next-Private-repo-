@@ -8,6 +8,7 @@ import {
 } from "./daily-summary";
 import type { CashExpense } from "./cash-session";
 import { PosError } from "./errors";
+import { legalEntityForLocation } from "@/lib/legal-entity-server";
 
 const FINAL_STATUSES = ["confirmed", "picked_up", "delivered"];
 
@@ -23,6 +24,12 @@ type SessionRow = {
   cash_to_bank: number | null;
   expenses: Array<{ description: string; amount_oere: number }> | null;
   locked: boolean;
+  opened_by: string | null;
+  closed_by: string | null;
+  expected_card: number | null;
+  counted_card: number | null;
+  card_difference: number | null;
+  card_note: string | null;
 };
 
 export type DailySummaryQuery = {
@@ -47,8 +54,8 @@ export async function loadDailySummary(q: DailySummaryQuery): Promise<DailySumma
     .select(
       `id, order_number, receipt_number, receipt_no, type, total, discount_amount, discount_reason, bundle_discount_amount,
        vat_total, brugtmoms_total, confirmed_at, payment_method, register_id,
-       order_items ( item_type, quantity, total_price, discount_amount, vat_scheme, vat_amount ),
-       order_payments ( type, amount_oere )`,
+       order_items ( item_type, quantity, total_price, discount_amount, vat_scheme, vat_amount, description ),
+       order_payments ( type, amount_oere, reference )`,
     )
     .in("type", ["pos", "credit_note"])
     .in("status", FINAL_STATUSES)
@@ -70,7 +77,7 @@ export async function loadDailySummary(q: DailySummaryQuery): Promise<DailySumma
   let sessions: SummarySession[] = [];
   if (regIds.length > 0) {
     const sessionCols =
-      "id, register_id, opened_at, closed_at, opening_float, counted_cash, expected_cash, difference, cash_to_bank, expenses, locked";
+      "id, register_id, opened_at, closed_at, opening_float, counted_cash, expected_cash, difference, cash_to_bank, expenses, locked, opened_by, closed_by, expected_card, counted_card, card_difference, card_note";
     const [{ data: closedRows }, { data: openRows }] = await Promise.all([
       supabase
         .from("cash_sessions")
@@ -94,6 +101,12 @@ export async function loadDailySummary(q: DailySummaryQuery): Promise<DailySumma
         adjById.set(a.session_id, list);
       }
     }
+    const staffIds = [...new Set(rows.flatMap((r) => [r.opened_by, r.closed_by]).filter((x): x is string => !!x))];
+    const staffName = new Map<string, string>();
+    if (staffIds.length > 0) {
+      const { data: staff } = await supabase.from("staff").select("id, name").in("id", staffIds);
+      for (const st of (staff ?? []) as Array<{ id: string; name: string }>) staffName.set(st.id, st.name);
+    }
     sessions = rows.map((r) => ({
       id: r.id,
       registerId: r.register_id,
@@ -107,12 +120,31 @@ export async function loadDailySummary(q: DailySummaryQuery): Promise<DailySumma
       expenses: (r.expenses ?? []).map<CashExpense>((e) => ({ description: e.description, amountOere: e.amount_oere })),
       locked: r.locked,
       adjustments: adjById.get(r.id) ?? [],
+      openedByName: r.opened_by ? (staffName.get(r.opened_by) ?? null) : null,
+      closedByName: r.closed_by ? (staffName.get(r.closed_by) ?? null) : null,
+      expectedCard: r.expected_card,
+      countedCard: r.counted_card,
+      cardDifference: r.card_difference,
+      cardNote: r.card_note,
     }));
   }
 
+  // Bilagets hoved: butik og juridisk enhed. Fejler opslaget, udelades linjerne blot.
+  const locationId = q.locationId ?? regList[0]?.location_id ?? null;
+  const [{ data: location }, company] = await Promise.all([
+    locationId
+      ? supabase.from("locations").select("name, address").eq("id", locationId).maybeSingle()
+      : Promise.resolve({ data: null }),
+    legalEntityForLocation(locationId),
+  ]);
+  const loc = location as { name: string | null; address: string | null } | null;
+
   return aggregateDailySummary((orders ?? []) as unknown as SummaryOrder[], sessions, {
     date: q.date,
-    locationId: q.locationId ?? regList[0]?.location_id ?? null,
+    locationId,
+    locationName: loc?.name ?? null,
+    locationAddress: loc?.address ?? null,
+    company,
     registerId: q.registerId ?? null,
     registerName: q.registerId ? (regList[0]?.name ?? null) : null,
   });

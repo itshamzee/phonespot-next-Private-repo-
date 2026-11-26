@@ -224,3 +224,78 @@ describe("Dinero journal CSV", () => {
     expect(cash).toMatchObject({ debit: 0, credit: 25000 });
   });
 });
+
+describe("bilagsoplysninger på dagsopgørelsen", () => {
+  const sale: SummaryOrder = {
+    ...base,
+    id: "b1",
+    order_number: "PSP-9",
+    receipt_number: "K1-000002",
+    receipt_no: 2,
+    type: "pos",
+    total: 125000,
+    vat_total: 25000,
+    order_items: [
+      { item_type: "repair_service", quantity: 1, total_price: 100000, discount_amount: 0, vat_scheme: "regular", description: "Skærmskift iPhone 15" },
+      { item_type: "free_text", quantity: 1, total_price: 25000, discount_amount: 0, vat_scheme: "regular", description: null },
+    ],
+    order_payments: [{ type: "kort_terminal", amount_oere: 125000, reference: "ref-1" }],
+  };
+  const session: SummarySession = {
+    id: "cs1",
+    registerId: "r1",
+    openedAt: "2026-11-26T10:30:00.000Z",
+    closedAt: "2026-11-26T16:51:00.000Z",
+    openingFloat: 0,
+    countedCash: 0,
+    expectedCash: 0,
+    difference: 0,
+    cashToBank: 0,
+    expenses: [],
+    locked: true,
+    adjustments: [],
+    closedByName: "Test",
+    expectedCard: 125000,
+    countedCard: 124000,
+    cardDifference: -1000,
+    cardNote: "Slåfejl",
+  };
+  const s = aggregateDailySummary([sale], [session], {
+    date: "2026-11-26",
+    locationName: "Vejle Kontor",
+    company: { name: "Fixon ApS", cvr: "46079019" },
+  });
+
+  it("viser omsætning ekskl. moms og fordeling på salgstype", () => {
+    expect(s.netExVat).toBe(100000);
+    expect(s.byKind).toEqual([
+      { kind: "repair_service", label: "Reparationer", gross: 100000 },
+      { kind: "free_text", label: "Andet salg (fritekst)", gross: 25000 },
+    ]);
+    expect(s.byKind.reduce((sum, k) => sum + k.gross, 0)).toBe(s.netTotal);
+  });
+
+  it("har en bonliste med indhold og betalingsreference", () => {
+    expect(s.receipts).toEqual([
+      {
+        number: "K1-000002",
+        type: "pos",
+        confirmedAt: base.confirmed_at,
+        total: 125000,
+        what: "Skærmskift iPhone 15, Andet salg (fritekst)",
+        payments: [{ type: "kort_terminal", amount: 125000, reference: "ref-1" }],
+      },
+    ]);
+  });
+
+  it("tager kortafstemningen fra den lukkede session", () => {
+    expect(s.card).toEqual({ expected: 125000, counted: 124000, difference: -1000, notes: ["Slåfejl"] });
+    expect(s.company?.cvr).toBe("46079019");
+    expect(s.locationName).toBe("Vejle Kontor");
+  });
+
+  it("har ingen kortafstemning, når sessionen mangler en terminaltotal", () => {
+    const none = aggregateDailySummary([sale], [{ ...session, countedCard: null }], { date: "2026-11-26" });
+    expect(none.card).toBeNull();
+  });
+});
