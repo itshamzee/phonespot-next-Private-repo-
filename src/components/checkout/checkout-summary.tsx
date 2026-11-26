@@ -4,6 +4,7 @@ import { gradeDisplayLabel } from "@/lib/grades";
 import Image from "next/image";
 import { useCart } from "@/components/cart/cart-context";
 import { formatOere, lineTotal } from "@/lib/cart/utils";
+import { BlackWeekGift } from "@/components/campaign/black-week";
 import { THREE_FOR_TWO_LABEL } from "@/lib/lagersalg/three-for-two";
 import { useHasChanged } from "@/components/ui/use-has-changed";
 
@@ -83,6 +84,8 @@ export function CheckoutSummary() {
                       + {u.label} ({formatOere(u.price)})
                     </p>
                   ))}
+
+                  {item.type === "device" && <BlackWeekGift title={item.title} />}
 
                   {item.type === "sku_product" && item.quantity > 1 && (
                     <p className="text-xs text-gray">Antal: {item.quantity}</p>

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { StorefrontIcon, type StorefrontIconKind } from "@/components/ui/storefront-icon";
 import { CardHoverImage } from "@/components/product/card-hover-image";
 import styles from "./storefront.module.css";
+import { isBlackWeek } from "@/lib/campaign/black-week";
+import { useBlackWeek } from "@/lib/campaign/use-black-week";
 
 import type { HomepageProduct } from "@/lib/home/homepage-products";
 
@@ -22,6 +24,7 @@ const links: { label: string; href: string; icon: StorefrontIconKind }[] = [
 function ProductCard({ product }: { product: HomepageProduct }) {
   const [failedImage, setFailedImage] = useState(false);
   const isAccessory = product.category === "accessory";
+  const blackWeek = useBlackWeek(isBlackWeek());
   const specs = product.specifications ?? {};
   const descriptor = product.category === "laptop" || product.category === "macbook"
     ? [specs.ram && `${specs.ram} RAM`, specs.storage].filter(Boolean).join(" · ")
@@ -32,7 +35,7 @@ function ProductCard({ product }: { product: HomepageProduct }) {
   return <article className={`${styles.product} card-lift`}>
     <Link href={product.href}>
       <div className={`${styles["product-photo"]} card-media`}>
-        <span className={styles["product-tag"]}>{isAccessory ? "Tilbehør" : "Refurbished"}</span>
+        <span className={styles["product-tag"]} style={blackWeek ? { background: "#000", color: "#fff" } : undefined}>{blackWeek ? "Black Week" : isAccessory ? "Tilbehør" : "Refurbished"}</span>
         {product.image && !failedImage
           // API images can originate from several verified product storage hosts.
           // eslint-disable-next-line @next/next/no-img-element

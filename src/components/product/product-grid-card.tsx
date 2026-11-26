@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CardHoverImage } from "@/components/product/card-hover-image";
+import { BlackWeekBadge, BlackWeekCardGift } from "@/components/campaign/black-week";
+import { isBlackWeek } from "@/lib/campaign/black-week";
 
 type ProductGridCardProps = {
   slug: string;
@@ -236,6 +238,8 @@ export function ProductGridCard({
     }
   }
 
+  const blackWeek = isBlackWeek();
+
   return (
     <Link
       href={`/refurbished/${slug}`}
@@ -244,6 +248,7 @@ export function ProductGridCard({
     >
       {/* Image */}
       <div data-product-image className="card-media relative aspect-[4/3] w-full overflow-hidden bg-[#F7F7F8]">
+        <BlackWeekBadge serverActive={blackWeek} />
         {/* Category pill — bottom left, only when requested */}
         {showCategoryBadge && (
           <div className="absolute bottom-3 left-3 z-10">
@@ -302,6 +307,7 @@ export function ProductGridCard({
                 {formatFromPrice(minPrice)} kr.
               </p>
               <p className="text-[11px] sm:text-xs text-[#6E6E73]">inkl. moms</p>
+              <BlackWeekCardGift title={title} serverActive={blackWeek} />
               {compareAtPrice != null && compareAtPrice > minPrice && (
                 <p className="mt-0.5 text-xs font-semibold text-[#1A3D2E]">
                   Spar op til {Math.round((1 - minPrice / compareAtPrice) * 100)}%

@@ -5,6 +5,7 @@ import { cartItemKey } from "@/lib/cart/types";
 import { useCart } from "@/components/cart/cart-context";
 import { formatOere, lineTotal, calcBundleDiscounts } from "@/lib/cart/utils";
 import { useHasChanged } from "@/components/ui/use-has-changed";
+import { BlackWeekGift } from "@/components/campaign/black-week";
 
 // ---------------------------------------------------------------------------
 // Grade badge colours
@@ -111,6 +112,7 @@ function DeviceLineItem({ item }: { item: CartDeviceItem }) {
               + {u.label} ({formatOere(u.price)})
             </p>
           ))}
+          <BlackWeekGift title={item.title} />
         </div>
 
         <div className="mt-2 flex items-center justify-between">

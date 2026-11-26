@@ -62,6 +62,8 @@ export interface SendOrderConfirmationParams {
   discountCode?: string;
   shippingMethod?: string;
   shippingAddress?: string;
+  /** Antal Black Week-gaver (glas + gennemsigtigt cover) på ordren. */
+  giftCount?: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -277,8 +279,22 @@ function buildTotalsTable(params: SendOrderConfirmationParams): string {
          </tr>`
       : "";
 
+  const giftCount = params.giftCount ?? 0;
+  const giftRow =
+    giftCount > 0
+      ? `<tr>
+           <td style="padding:6px 0;font-size:14px;color:${BRAND.charcoal};">
+             Black Week: beskyttelsesglas og gennemsigtigt cover${giftCount > 1 ? ` (${giftCount} sæt)` : ""}
+           </td>
+           <td style="padding:6px 0;font-size:14px;color:${BRAND.charcoal};text-align:right;white-space:nowrap;">
+             0 kr.
+           </td>
+         </tr>`
+      : "";
+
   return `
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;">
+      ${giftRow}
       <tr>
         <td style="padding:6px 0;font-size:14px;color:#666;">Subtotal</td>
         <td style="padding:6px 0;font-size:14px;color:#666;text-align:right;white-space:nowrap;">

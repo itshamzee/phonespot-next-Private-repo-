@@ -5,6 +5,8 @@ import { BLACK_NOVEMBER } from "@/lib/campaign/black-november";
 import { useBlackNovember } from "@/lib/campaign/use-black-november";
 import { useBlackNovemberDaysLeft } from "@/lib/campaign/use-days-left";
 import { PriceTag } from "./price-tag";
+import { BLACK_WEEK, isBlackWeek } from "@/lib/campaign/black-week";
+import { useBlackWeek } from "@/lib/campaign/use-black-week";
 
 // Sort flade, hvid tekst, grønt prismærke. Forsidens top ligger i black-november-hero.tsx.
 
@@ -12,6 +14,26 @@ import { PriceTag } from "./price-tag";
 export function BlackNovemberBar({ serverActive }: { serverActive: boolean }) {
   const active = useBlackNovember(serverActive);
   const daysLeft = useBlackNovemberDaysLeft();
+  const blackWeek = useBlackWeek(isBlackWeek());
+  if (blackWeek) {
+    return (
+      <div role="region" aria-label={BLACK_WEEK.name} className="bg-black text-[13px] text-white/65">
+        <Link
+          href={BLACK_WEEK.href}
+          className="group mx-auto flex max-w-[1280px] items-center justify-center gap-x-4 px-4 py-2.5 !text-white/65 sm:px-5"
+        >
+          <span className="min-w-0 truncate">
+            <strong className="font-semibold text-white">{BLACK_WEEK.name}</strong>
+            <span className="mx-2.5 inline-block h-3 w-px translate-y-[1px] bg-white/25" aria-hidden="true" />
+            <span className="text-white">{BLACK_WEEK.giftShort} med alle iPhones</span>
+            <span className="hidden lg:inline"> og {BLACK_NOVEMBER.repairPercent} % på alle reparationer</span>
+          </span>
+          {daysLeft && <span className="hidden shrink-0 tabular-nums md:inline">{daysLeft}</span>}
+          <span className="hidden shrink-0 font-semibold text-[#8fb89f] group-hover:underline group-hover:underline-offset-[3px] sm:inline">Se iPhones</span>
+        </Link>
+      </div>
+    );
+  }
   if (!active) return null;
   return (
     <div role="region" aria-label="Black November" className="bg-black text-[13px] text-white/65">

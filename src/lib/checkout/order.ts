@@ -3,6 +3,7 @@ import { readReservationOwner } from "@/lib/cart/reservation-owner";
 import { randomBytes } from "crypto";
 import type { ValidatedItem } from "./validate";
 import { cartItemKey, type DiscountApplication } from "@/lib/cart/types";
+import { blackWeekGiftNote, isBlackWeek } from "@/lib/campaign/black-week";
 
 export interface CustomerInfo {
   name: string;
@@ -150,6 +151,25 @@ export async function createOrder(params: CreateOrderParams): Promise<CreatedOrd
     : 1000;
   const orderNumber = `S-${lastNum + 1}`;
 
+  // Black Week: gaven (glas + gennemsigtigt cover) ved køb af iPhone står som
+  // intern note, så den bliver pakket. Modellen slås op i databasen, ikke i kurven.
+  let giftNote: string | null = null;
+  const deviceIds = params.items.flatMap((vi) => (vi.available && vi.item.type === "device" ? [vi.item.deviceId] : []));
+  if (deviceIds.length && isBlackWeek()) {
+    // Gaven må aldrig vælte et køb: fejler opslaget, oprettes ordren uden note.
+    try {
+      const { data: giftDevices } = await supabase
+        .from("devices")
+        .select("id, template:product_templates(model, display_name)")
+        .in("id", deviceIds);
+      const models = ((giftDevices ?? []) as unknown as Array<{ template: { model: string | null; display_name: string | null } | null }>)
+        .map((d) => d.template?.model ?? d.template?.display_name ?? null);
+      giftNote = blackWeekGiftNote(models);
+    } catch (giftErr) {
+      console.error("[checkout/order] Black Week-gave kunne ikke slås op:", giftErr);
+    }
+  }
+
   const { data: order, error: orderError } = await supabase.from("orders").insert({
     order_number: orderNumber,
     type: "online",
@@ -168,6 +188,7 @@ export async function createOrder(params: CreateOrderParams): Promise<CreatedOrd
     discount_code_id: params.discountCodeId,
     withdrawal_token: withdrawalToken,
     foxway_status: params.foxwayPending ? "pending" : null,
+    ...(giftNote ? { internal_notes: giftNote } : {}),
   }).select("id, order_number").single();
 
   if (orderError || !order) throw new Error(`Failed to create order: ${orderError?.message}`);

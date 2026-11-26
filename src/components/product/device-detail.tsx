@@ -1,6 +1,7 @@
 "use client";
 
 import { BLACK_NOVEMBER } from "@/lib/campaign/black-november";
+import { BlackWeekGift } from "@/components/campaign/black-week";
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -938,6 +939,7 @@ export function DeviceDetail({
                 Nypris er producentens danske pris, da modellen kom på markedet.
               </p>
             )}
+            {inStock && <BlackWeekGift title={template.display_name} boxed />}
             {inStock ? (
               <>
                 <p key={matchingDevices.length} className={stockChanged ? `${styles.stock} value-change` : styles.stock}>

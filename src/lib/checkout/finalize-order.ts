@@ -54,7 +54,7 @@ export async function finalizeCheckoutOrder({
     .from("orders")
     .select(
       `id, order_number, status, customer_id, total, discount_code_id,
-       subtotal, discount_amount, bundle_discount_amount, shipping_cost, shipping_method, withdrawal_token, stock_failure_at,
+       subtotal, discount_amount, bundle_discount_amount, shipping_cost, shipping_method, withdrawal_token, stock_failure_at, internal_notes,
        order_items(id, item_type, device_id, sku_product_id, quantity, unit_price, discount_amount, battery_upgrade, upgrade_details)`,
     )
     .eq("id", orderId)
@@ -231,6 +231,13 @@ export async function finalizeCheckoutOrder({
     });
   }
 
+  // Black Week-gaven blev lovet, da ordren blev oprettet (intern note) — den
+  // følger ordren, også hvis betalingen først går igennem efter kampagnens slut.
+  const blackWeekGiftLines = String((order as { internal_notes?: string | null }).internal_notes ?? "")
+    .split(String.fromCharCode(10))
+    .filter((line) => line.startsWith("Black Week-gave:"));
+  for (const line of blackWeekGiftLines) itemNames.push(`• ${line}`);
+
   // 11. Send order confirmation email with product names + images
   if (customer) {
     try {
@@ -252,6 +259,7 @@ export async function finalizeCheckoutOrder({
         total: order.total,
         withdrawalToken: order.withdrawal_token ?? "",
         shippingMethod: (order as any).shipping_method ?? undefined,
+        giftCount: blackWeekGiftLines.length,
       });
     } catch (emailErr) {
       console.error("[webhook] failed to send confirmation email:", emailErr);
@@ -292,7 +300,7 @@ export async function finalizeCheckoutOrder({
             const rawLine = itemNames[idx] || "";
             const name = rawLine.replace(/^•\s*/, "").replace(/\s*—\s*[\d.,]+\s*kr\.\s*$/, "").trim() || "Produkt";
             return { name, quantity: item.quantity, unitPrice: item.unit_price };
-          })
+          }).concat(blackWeekGiftLines.map((line) => ({ name: line, quantity: 1, unitPrice: 0 })))
         : orderItems.map((i) => ({
             name: i.item_type === "device" ? "Brugt enhed" : "Tilbehør",
             quantity: i.quantity,
