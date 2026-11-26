@@ -10,6 +10,9 @@ import { copenhagenDateString } from "@/lib/pos/copenhagen";
 import type { DailySummary } from "@/lib/pos/daily-summary";
 import { THREE_FOR_TWO_LABEL } from "@/lib/lagersalg/three-for-two";
 import type { RegisterInfo } from "@/lib/pos/sessions";
+import { useStoreScope } from "@/components/admin/shell/store-scope-context";
+
+type Loc = { id: string; name: string; slug: string | null };
 
 const card = "rounded-2xl border border-black/[0.04] bg-white p-5 shadow-sm";
 
@@ -24,7 +27,13 @@ function Row({ label, value, strong }: { label: string; value: string; strong?: 
 
 function CashupPageInner() {
   const searchParams = useSearchParams();
-  const locationId = searchParams.get("location_id") ?? "";
+  const urlLocationId = searchParams.get("location_id") ?? "";
+  const { scope, ownSlug, loading: scopeLoading } = useStoreScope();
+  const [locations, setLocations] = useState<Loc[]>([]);
+  const [locationsLoaded, setLocationsLoaded] = useState(false);
+  const [pickedLocationId, setPickedLocationId] = useState("");
+  // Kun én butik at vælge imellem: brug den uden at spørge.
+  const locationId = pickedLocationId || urlLocationId || (locations.length === 1 ? locations[0].id : "");
   const [registerId, setRegisterId] = useState(searchParams.get("register_id") ?? "");
   // The day is the Copenhagen calendar day, never the UTC date.
   const [date, setDate] = useState(copenhagenDateString());
@@ -50,6 +59,50 @@ function CashupPageInner() {
       cancelled = true;
     };
   }, []);
+
+  // Butikker, brugeren må se. Bruges til butiksvælgeren og til at finde butikken,
+  // når siden åbnes fra menuen uden location_id i adressen.
+  useEffect(() => {
+    let cancelled = false;
+    posJson<{ locations: Loc[] }>("/api/pos/locations")
+      .then((d) => {
+        if (!cancelled) setLocations([...d.locations].sort((a, b) => a.name.localeCompare(b.name, "da")));
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setLocationsLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (urlLocationId || pickedLocationId || scopeLoading || locations.length < 2) return;
+    const wanted = scope !== "alle" && scope !== "ingen" ? scope : ownSlug;
+    if (!wanted) return;
+    // "vejle" dækker også "vejle-kontor": tag butikken med en aktiv kasse.
+    const candidates = locations.filter((l) => l.slug === wanted || l.slug?.startsWith(`${wanted}-`));
+    if (candidates.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      for (const l of candidates) {
+        try {
+          const d = await posJson<{ registers: RegisterInfo[] }>(`/api/pos/session?location_id=${l.id}`);
+          if (d.registers.length > 0) {
+            if (!cancelled) setPickedLocationId((cur) => cur || l.id);
+            return;
+          }
+        } catch {
+          // Butikken springes over.
+        }
+      }
+      if (!cancelled) setPickedLocationId((cur) => cur || candidates[0].id);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [urlLocationId, pickedLocationId, scopeLoading, scope, ownSlug, locations]);
 
   useEffect(() => {
     if (!locationId) return;
@@ -82,13 +135,42 @@ function CashupPageInner() {
     };
   }, [locationId, registerId, date]);
 
+  const storeSelect =
+    locations.length > 1 ? (
+      <select
+        value={locationId}
+        onChange={(e) => {
+          setPickedLocationId(e.target.value);
+          setRegisterId("");
+        }}
+        className="rounded-xl border border-black/[0.06] bg-white px-3 py-2.5 text-sm"
+        aria-label="Butik"
+      >
+        {locationId ? null : <option value="">Vælg butik</option>}
+        {locations.map((l) => (
+          <option key={l.id} value={l.id}>{l.name}</option>
+        ))}
+      </select>
+    ) : null;
+
   if (!locationId) {
     return (
       <div className="mx-auto max-w-4xl py-20 text-center">
-        <p className="text-sm font-medium text-charcoal/30">Ingen lokation valgt</p>
-        <Link href="/admin/platform/pos" className="mt-2 inline-block text-sm font-semibold text-emerald-600">
-          Tilbage til kassen
-        </Link>
+        {!locationsLoaded || scopeLoading ? (
+          <p className="text-sm font-medium text-charcoal/40">Henter butikker</p>
+        ) : storeSelect ? (
+          <>
+            <p className="mb-3 text-sm font-medium text-charcoal/60">Vælg den butik, du vil se dagsopgørelsen for</p>
+            {storeSelect}
+          </>
+        ) : (
+          <p className="text-sm font-medium text-charcoal/40">Du har ikke adgang til en butik med kasse</p>
+        )}
+        <div>
+          <Link href="/admin/platform/pos" className="mt-4 inline-block text-sm font-semibold text-emerald-600">
+            Tilbage til kassen
+          </Link>
+        </div>
       </div>
     );
   }
@@ -105,6 +187,7 @@ function CashupPageInner() {
           <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-charcoal sm:text-3xl">Dagsopgørelse</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {storeSelect}
           <select
             value={registerId}
             onChange={(e) => setRegisterId(e.target.value)}
